@@ -12,16 +12,16 @@ var projectKeyLogicInstance *ProjectKeyLogic
 var onceForProjectKeyLogicInstance sync.Once = sync.Once{}
 
 type ProjectKeyLogic struct {
-	dbEngine      *xorm.Engine
-	projectKeyDAO *dao.ProjectKeyDAO
+	dbEngine             *xorm.Engine
+	projectKeyContentDAO *dao.ProjectKeyContentDAO
 }
 
 func NewProjectKeyLogic(ctx context.Context, dbEngine *xorm.Engine,
-	projectKeyDAO *dao.ProjectKeyDAO) *ProjectKeyLogic {
+	projectKeyContentDAO *dao.ProjectKeyContentDAO) *ProjectKeyLogic {
 	onceForProjectKeyLogicInstance.Do(func() {
 		projectKeyLogicInstance = &ProjectKeyLogic{
-			dbEngine:      dbEngine,
-			projectKeyDAO: projectKeyDAO,
+			dbEngine:             dbEngine,
+			projectKeyContentDAO: projectKeyContentDAO,
 		}
 	})
 

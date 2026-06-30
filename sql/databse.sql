@@ -16,11 +16,10 @@ create table project_tokens (
     create_time datetime default current_timestamp,
     update_time datetime default current_timestamp on update current_timestamp,
     uk_project_id_token unique (project_id, project_token),
-    idx_project_id index (protject_id),
-    idx_project_id_token index (project_id, project_token)
+    idx_project_id index (protject_id)
 );
 
-Create table keys (
+Create table project_key_contents (
     id bigint primary key auto_increment,
     project_id bigint not null default 0,
     project_key varchar(128) not null default '',

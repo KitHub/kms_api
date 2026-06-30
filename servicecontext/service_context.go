@@ -16,18 +16,18 @@ import (
 )
 
 type ServiceContext struct {
-	Logger            *slog.Logger
-	CronComponent     *component.CronComponent
-	InitComponent     *component.InitComponent
-	ShutdownComponent *component.ShutdownComponent
-	DBEngine          *xorm.Engine
-	ProjectDAO        *dao.ProjectDAO
-	ProjectKeyDAO     *dao.ProjectKeyDAO
-	ProjectTokenDAO   *dao.ProjectTokenDAO
-	ProjectLogic      *logic.ProjectLogic
-	ProjectKeyLogic   *logic.ProjectKeyLogic
-	ProjectTokenLogic *logic.ProjectTokenLogic
-	KMSAPIService     *service.KMSAPIService
+	Logger               *slog.Logger
+	CronComponent        *component.CronComponent
+	InitComponent        *component.InitComponent
+	ShutdownComponent    *component.ShutdownComponent
+	DBEngine             *xorm.Engine
+	ProjectDAO           *dao.ProjectDAO
+	ProjectKeyContentDAO *dao.ProjectKeyContentDAO
+	ProjectTokenDAO      *dao.ProjectTokenDAO
+	ProjectLogic         *logic.ProjectLogic
+	ProjectKeyLogic      *logic.ProjectKeyLogic
+	ProjectTokenLogic    *logic.ProjectTokenLogic
+	KMSAPIService        *service.KMSAPIService
 }
 
 var gServiceCtx *ServiceContext
@@ -57,28 +57,28 @@ func InitServiceContext(ctx context.Context, configEntity *config.ConfigEntity) 
 		}
 
 		projectDAO := dao.NewProjectDAO(ctx)
-		projectKeyDAO := dao.NewProjectKeyDAO(ctx)
+		projectKeyContentDAO := dao.NewProjectKeyContentDAO(ctx)
 		projectTokenDAO := dao.NewProjectTokenDAO(ctx)
 
 		projectLogic := logic.NewProjectLogic(ctx, dbEngine, projectDAO)
-		projectKeyLogic := logic.NewProjectKeyLogic(ctx, dbEngine, projectKeyDAO)
+		projectKeyLogic := logic.NewProjectKeyLogic(ctx, dbEngine, projectKeyContentDAO)
 		projectTokenLogic := logic.NewProjectTokenLogic(ctx, dbEngine, projectTokenDAO)
 
 		kmsapiService := service.NewKMSAPIService(ctx, projectLogic, projectKeyLogic, projectTokenLogic)
 
 		gServiceCtx = &ServiceContext{
-			Logger:            logger,
-			ShutdownComponent: shutdownComponent,
-			InitComponent:     initComponent,
-			CronComponent:     cronComponent,
-			KMSAPIService:     kmsapiService,
-			DBEngine:          dbEngine,
-			ProjectDAO:        projectDAO,
-			ProjectKeyDAO:     projectKeyDAO,
-			ProjectTokenDAO:   projectTokenDAO,
-			ProjectLogic:      projectLogic,
-			ProjectKeyLogic:   projectKeyLogic,
-			ProjectTokenLogic: projectTokenLogic,
+			Logger:               logger,
+			ShutdownComponent:    shutdownComponent,
+			InitComponent:        initComponent,
+			CronComponent:        cronComponent,
+			KMSAPIService:        kmsapiService,
+			DBEngine:             dbEngine,
+			ProjectDAO:           projectDAO,
+			ProjectKeyContentDAO: projectKeyContentDAO,
+			ProjectTokenDAO:      projectTokenDAO,
+			ProjectLogic:         projectLogic,
+			ProjectKeyLogic:      projectKeyLogic,
+			ProjectTokenLogic:    projectTokenLogic,
 		}
 	})
 
