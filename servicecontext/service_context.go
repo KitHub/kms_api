@@ -4,12 +4,15 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/KitHub/kms_api/component"
 	"github.com/KitHub/kms_api/config"
+	"github.com/KitHub/kms_api/dao"
 	"github.com/KitHub/kms_api/logic"
 	"github.com/KitHub/kms_api/service"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"xorm.io/xorm"
 )
 
 type ServiceContext struct {
@@ -17,7 +20,13 @@ type ServiceContext struct {
 	CronComponent     *component.CronComponent
 	InitComponent     *component.InitComponent
 	ShutdownComponent *component.ShutdownComponent
-	DemoLogic         *logic.DemoLogic
+	DBEngine          *xorm.Engine
+	ProjectDAO        *dao.ProjectDAO
+	ProjectKeyDAO     *dao.ProjectKeyDAO
+	ProjectTokenDAO   *dao.ProjectTokenDAO
+	ProjectLogic      *logic.ProjectLogic
+	ProjectKeyLogic   *logic.ProjectKeyLogic
+	ProjectTokenLogic *logic.ProjectTokenLogic
 	KMSAPIService     *service.KMSAPIService
 }
 
@@ -39,16 +48,37 @@ func InitServiceContext(ctx context.Context, configEntity *config.ConfigEntity) 
 		cronComponent := component.NewCronConponent()
 		initComponent := component.NewInitComponent(ctx)
 		shutdownComponent := component.NewShutdownComponent(ctx)
-		demoLogic := logic.NewDemoLogic()
-		kmsapiService := service.NewKMSAPIService(demoLogic)
+
+		dbEngine, innerErr := initDB(ctx, configEntity.DBConfig, shutdownComponent)
+		if innerErr != nil {
+			slog.ErrorContext(ctx, "init database failed", slog.Any("error", innerErr))
+			err = innerErr
+			return
+		}
+
+		projectDAO := dao.NewProjectDAO(ctx)
+		projectKeyDAO := dao.NewProjectKeyDAO(ctx)
+		projectTokenDAO := dao.NewProjectTokenDAO(ctx)
+
+		projectLogic := logic.NewProjectLogic(ctx, dbEngine, projectDAO)
+		projectKeyLogic := logic.NewProjectKeyLogic(ctx, dbEngine, projectKeyDAO)
+		projectTokenLogic := logic.NewProjectTokenLogic(ctx, dbEngine, projectTokenDAO)
+
+		kmsapiService := service.NewKMSAPIService(ctx, projectLogic, projectKeyLogic, projectTokenLogic)
 
 		gServiceCtx = &ServiceContext{
+			Logger:            logger,
 			ShutdownComponent: shutdownComponent,
 			InitComponent:     initComponent,
-			DemoLogic:         demoLogic,
-			KMSAPIService:     kmsapiService,
-			Logger:            logger,
 			CronComponent:     cronComponent,
+			KMSAPIService:     kmsapiService,
+			DBEngine:          dbEngine,
+			ProjectDAO:        projectDAO,
+			ProjectKeyDAO:     projectKeyDAO,
+			ProjectTokenDAO:   projectTokenDAO,
+			ProjectLogic:      projectLogic,
+			ProjectKeyLogic:   projectKeyLogic,
+			ProjectTokenLogic: projectTokenLogic,
 		}
 	})
 
@@ -69,6 +99,34 @@ func initLog(ctx context.Context, logConfig *config.LogConfigEntity) (
 	serviceLogger := slog.New(slog.NewTextHandler(log, nil))
 	slog.SetDefault(serviceLogger)
 	return serviceLogger, nil
+}
+
+func initDB(ctx context.Context, dbConfig *config.DBConfigEntity,
+	shutdownComponent *component.ShutdownComponent) (*xorm.Engine, error) {
+	engine, err := xorm.NewEngine(dbConfig.DriverName, dbConfig.DataSourceName)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to initialize database connection",
+			slog.Any("error", err))
+		return nil, err
+	}
+
+	engine.SetMaxIdleConns(dbConfig.MaxIdleConns)
+	engine.SetMaxOpenConns(dbConfig.MaxOpenConns)
+	engine.SetConnMaxLifetime(
+		time.Duration(dbConfig.ConnMaxLifetime) * time.Second)
+
+	err = engine.PingContext(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to ping database", slog.Any("error", err))
+		return nil, err
+	}
+
+	shutdownComponent.RegisterShutdownCallback(func(ctx context.Context) error {
+		return engine.Close()
+	})
+
+	slog.InfoContext(ctx, "Database connection initialized successfully")
+	return engine, nil
 }
 
 func GetServiceContext() *ServiceContext {
