@@ -15,9 +15,9 @@ var (
 
 type KMSAPIService struct {
 	kms_api.UnimplementedKMSAPIServer
-	projectLogic      *logic.ProjectLogic
-	projectKeyLogic   *logic.ProjectKeyLogic
-	projectTokenLogic *logic.ProjectTokenLogic
+	projectLogic           *logic.ProjectLogic
+	projectKeyContentLogic *logic.ProjectKeyContentLogic
+	projectTokenLogic      *logic.ProjectTokenLogic
 }
 
 // Load implements [kms_api.KMSAPIServer].
@@ -30,12 +30,12 @@ func (d *KMSAPIService) Store(context.Context, *kms_api.StoreRequest) (*kms_api.
 	panic("unimplemented")
 }
 
-func NewKMSAPIService(ctx context.Context, projectLogic *logic.ProjectLogic, projectKeyLogic *logic.ProjectKeyLogic, projectTokenLogic *logic.ProjectTokenLogic) *KMSAPIService {
+func NewKMSAPIService(ctx context.Context, projectLogic *logic.ProjectLogic, projectKeyContentLogic *logic.ProjectKeyContentLogic, projectTokenLogic *logic.ProjectTokenLogic) *KMSAPIService {
 	kmsapiServiceOnce.Do(func() {
 		kmsapiServiceInstance = &KMSAPIService{
-			projectLogic:      projectLogic,
-			projectKeyLogic:   projectKeyLogic,
-			projectTokenLogic: projectTokenLogic,
+			projectLogic:           projectLogic,
+			projectKeyContentLogic: projectKeyContentLogic,
+			projectTokenLogic:      projectTokenLogic,
 		}
 	})
 	return kmsapiServiceInstance
