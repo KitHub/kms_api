@@ -62,7 +62,7 @@ func InitServiceContext(ctx context.Context, configEntity *config.ConfigEntity) 
 
 		projectLogic := logic.NewProjectLogic(ctx, dbEngine, projectDAO)
 		projectKeyContentLogic := logic.NewProjectKeyContentLogic(ctx, dbEngine, projectKeyContentDAO)
-		projectTokenLogic := logic.NewProjectTokenLogic(ctx, dbEngine, projectTokenDAO)
+		projectTokenLogic := logic.NewProjectTokenLogic(ctx, configEntity.ProjectTokensConfig, dbEngine, projectTokenDAO)
 
 		kmsapiService := service.NewKMSAPIService(ctx, projectLogic, projectKeyContentLogic, projectTokenLogic)
 

@@ -36,9 +36,15 @@ type TraceConfigEntity struct {
 	SamplerRatio     float64 `yaml:"sampler_ratio"`     // 采样器参数（如采样率）
 }
 
+type ProjectTokensConfigEntity struct {
+	DefaultDurationInDaysForNewToken     int32
+	DefaultDurationInDaysForUselessToken int32
+}
+
 type ConfigEntity struct {
-	LogConfig    *LogConfigEntity    `yaml:"log"`
-	DBConfig     *DBConfigEntity     `yaml:"db"`
-	ServerConfig *ServerConfigEntity `yaml:"server"`
-	TraceConfig  *TraceConfigEntity  `yaml:"trace"`
+	LogConfig           *LogConfigEntity           `yaml:"log"`
+	DBConfig            *DBConfigEntity            `yaml:"db"`
+	ServerConfig        *ServerConfigEntity        `yaml:"server"`
+	TraceConfig         *TraceConfigEntity         `yaml:"trace"`
+	ProjectTokensConfig *ProjectTokensConfigEntity `yaml:"project_tokens"`
 }
