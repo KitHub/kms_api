@@ -68,3 +68,20 @@ func (logic *ProjectLogic) FindByName(ctx context.Context, projectName string) (
 	slog.InfoContext(ctx, "project found", slog.String("projectName", projectName), slog.Any("projectEntity", projectEntity))
 	return projectEntity, nil
 }
+
+func (logic *ProjectLogic) FindById(ctx context.Context, projectId int64) (projectEntity *entity.ProjectEntity, err error) {
+	slog.InfoContext(ctx, "find project", slog.Any("projectId", projectId))
+	projectEntity = &entity.ProjectEntity{
+		Id: projectId,
+	}
+	err = wrapper.TransactionWrapper(ctx, logic.dbEngine, func(session *xorm.Session) error {
+		projectEntity, err = logic.projectDAO.QueryById(ctx, session, projectId)
+		return err
+	})
+	if err != nil {
+		slog.ErrorContext(ctx, "find project failed", slog.Any("projectId", projectId), slog.Any("error", err))
+		return nil, err
+	}
+	slog.InfoContext(ctx, "project found", slog.Any("projectId", projectId), slog.Any("projectEntity", projectEntity))
+	return projectEntity, nil
+}

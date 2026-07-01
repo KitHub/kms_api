@@ -37,7 +37,6 @@ type TraceConfigEntity struct {
 }
 
 type ProjectTokensConfigEntity struct {
-	Enabled                              bool
 	DefaultDurationInDaysForNewToken     int32
 	DefaultDurationInDaysForUselessToken int32
 }

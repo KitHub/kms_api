@@ -29,6 +29,5 @@ trace:
   sampler_arg: "0.1" # 采样器参数（如采样率）
 
 project_tokens:
-  enabled: false # 是否启用项目令牌功能
   default_duration_in_days_for_new_token: 180     # 新建token的默认失效时长
   default_duration_in_days_for_useless_token: 1   # 无用token的默认失效时长
