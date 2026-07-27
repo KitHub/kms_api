@@ -8,7 +8,6 @@ import (
 	"github.com/KitHub/kms_api/logic"
 	"github.com/KitHub/protocols/kms_api"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
@@ -31,36 +30,31 @@ func (s *KMSAPIService) Load(ctx context.Context, req *kms_api.LoadRequest) (rsp
 	projectEntity, err := s.projectLogic.FindById(ctx, req.GetProjectId())
 	if err != nil {
 		slog.ErrorContext(ctx, "find project failed", slog.Any("projectId", req.GetProjectId()), slog.Any("error", err))
-		return nil, status.Errorf(codes.Internal, "server error")
+		rsp = createPBRspWithPBMessageType[kms_api.LoadResponse](ctx, codes.Internal, nil)
+		return rsp, nil
 	}
 	if projectEntity == nil {
 		slog.ErrorContext(ctx, "project not found", slog.Any("projectId", req.GetProjectId()))
-		return nil, status.Errorf(codes.InvalidArgument, "project not found")
+		rsp = createPBRspWithPBMessageType[kms_api.LoadResponse](ctx, codes.Internal, nil)
+		return rsp, nil
 	}
 
 	projectKeyContentEntity, err := s.projectKeyContentLogic.FindByProjectKey(ctx, projectEntity, req.GetKey())
 	if err != nil {
 		slog.ErrorContext(ctx, "find project key-content failed", slog.Any("projectId", req.GetProjectId()), slog.Any("error", err))
-		return nil, status.Errorf(codes.Internal, "server error")
+		rsp = createPBRspWithPBMessageType[kms_api.LoadResponse](ctx, codes.Internal, nil)
+		return rsp, nil
 	}
 	if projectKeyContentEntity == nil {
-		rsp = &kms_api.LoadResponse{
-			ErrCode: 0,
-			ErrMsg:  "ok",
-			Data: &kms_api.LoadResponseData{
-				Content: "",
-			},
-		}
+		rsp = createPBRspWithPBMessageType[kms_api.LoadResponse](ctx, codes.OK, &kms_api.LoadResponseData{
+			Content: "",
+		})
 		return rsp, nil
 	}
 
-	rsp = &kms_api.LoadResponse{
-		ErrCode: 0,
-		ErrMsg:  "ok",
-		Data: &kms_api.LoadResponseData{
-			Content: projectKeyContentEntity.ProjectKeyContent,
-		},
-	}
+	rsp = createPBRspWithPBMessageType[kms_api.LoadResponse](ctx, codes.OK, &kms_api.LoadResponseData{
+		Content: projectKeyContentEntity.ProjectKeyContent,
+	})
 
 	slog.InfoContext(ctx, "load key-content done", slog.Any("project_id", req.GetProjectId()), slog.Any("key", req.GetKey()), slog.Any("content", projectKeyContentEntity.ProjectKeyContent))
 	return rsp, nil
@@ -73,24 +67,23 @@ func (s *KMSAPIService) Store(ctx context.Context, req *kms_api.StoreRequest) (r
 	projectEntity, err := s.projectLogic.FindById(ctx, req.GetProjectId())
 	if err != nil {
 		slog.ErrorContext(ctx, "find project failed", slog.Any("projectId", req.GetProjectId()), slog.Any("error", err))
-		return nil, status.Errorf(codes.Internal, "server error")
+		rsp = createPBRspWithPBMessageType[kms_api.StoreResponse](ctx, codes.Internal, nil)
+		return rsp, nil
 	}
 	if projectEntity == nil {
 		slog.ErrorContext(ctx, "project not found", slog.Any("projectId", req.GetProjectId()))
-		return nil, status.Errorf(codes.InvalidArgument, "project not found")
+		rsp = createPBRspWithPBMessageType[kms_api.StoreResponse](ctx, codes.Internal, nil)
+		return rsp, nil
 	}
 
 	_, err = s.projectKeyContentLogic.SaveKeyContent(ctx, projectEntity, req.GetKey(), req.GetContent())
 	if err != nil {
 		slog.ErrorContext(ctx, "save project key-content failed", slog.Any("key", req.GetKey()), slog.Any("content", req.GetContent()), slog.Any("error", err))
-		return nil, status.Errorf(codes.Internal, "server error")
+		rsp = createPBRspWithPBMessageType[kms_api.StoreResponse](ctx, codes.Internal, nil)
+		return rsp, nil
 	}
 
-	rsp = &kms_api.StoreResponse{
-		ErrCode: 0,
-		ErrMsg:  "ok",
-		Data:    &kms_api.StoreResponseData{},
-	}
+	rsp = createPBRspWithPBMessageType[kms_api.StoreResponse](ctx, codes.OK, &kms_api.StoreResponseData{})
 
 	slog.InfoContext(ctx, "store key-content done", slog.Any("project_id", req.GetProjectId()), slog.Any("key", req.GetKey()), slog.Any("content", req.GetContent()))
 	return rsp, nil
